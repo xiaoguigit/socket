@@ -103,8 +103,12 @@ static int * msg_handle_fun(void *arg)
 	int *num = (int *)arg;
 	int i = 0;
 	int j = 0;
+	struct sockaddr_in addr;
+	int addrlen = sizeof(struct sockaddr_in);
         while(1) 
 	{
+		if((*num) == 0)
+			continue;
 		for(i = 0; i < (*num); i++)
 		{
 			if((numbytes = recv(client_set[i], recv_buf, sizeof(recv_buf),0))==-1)
@@ -119,6 +123,27 @@ static int * msg_handle_fun(void *arg)
 					if(send(client_set[j], recv_buf, sizeof(recv_buf),0)==-1)
 					{
 						//这里需要处理不能通信的socket
+						getpeername(client_set[i], (struct sockaddr * )&addr, &addrlen);
+						if(client_set[i] < 0)
+						{
+							if(i != (*num) -1)
+							{
+								for(j = 0; j < (*num) - 1; j++)
+								{
+									client_set[j] = client_set[j + 1];
+								}
+							}
+							else
+							{
+								client_set[i] = 0;
+							}
+							if((*num) > 0)
+								(*num)--;
+							else
+								(*num) = 0;
+							printf("%s has already disconnect.\n", inet_ntoa(addr.sin_addr));
+						}
+
 						continue;
 					}
 				}
@@ -141,8 +166,11 @@ static int * disconnect_handle_fun(void *arg)
 	
 	while(1) 
 	{
+		if((*num) == 0)
+			continue;
 		for(i = 0; i < (*num); i++)
 		{
+			getpeername(client_set[i], (struct sockaddr * )&addr, &addrlen);
 			if(client_set[i] < 0)
 			{
 				if(i != (*num) -1)
@@ -156,10 +184,14 @@ static int * disconnect_handle_fun(void *arg)
 				{
 					client_set[i] = 0;
 				}
-				(*num)--;
+				if((*num) > 0)
+					(*num)--;
+				else
+					(*num) = 0;
+				printf("%s has already disconnect.\n", inet_ntoa(addr.sin_addr));
 			}
 
-			getpeername(client_set[i], (struct sockaddr * )&addr, &addrlen);
+			
 			getsockopt(client_set[i], IPPROTO_TCP, TCP_INFO, &info, (socklen_t *)&len);
 			if(info.tcpi_state != 1)
 			{
@@ -175,8 +207,12 @@ static int * disconnect_handle_fun(void *arg)
 				{
 					client_set[i] = 0;
 				}
-				(*num)--;
+				if((*num) > 0)
+					(*num)--;
+				else
+					(*num) = 0;
 			}
 		}
 	}
 }
+

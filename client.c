@@ -41,7 +41,7 @@ int main(int argc,char *argv[])
 		exit(1);
 	}
 
-	while(2){
+
 	//向服务器发送字符串msg
 	if(send(sockfd,msg,strlen(msg),0)==-1) {
 		perror("send");
@@ -57,8 +57,6 @@ int main(int argc,char *argv[])
 	buf[numbytes] = '\0';
 	printf("result:%s",buf);
 
-	sleep(2);
-	}
 	close(sockfd);
 	return 0;
 }
