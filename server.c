@@ -58,15 +58,11 @@ int main(int argc, char**argv)
 		printf("Fail to Create Listen Thread.\n");
 		return -1;
 	}
-
-
-	//创建消息监听线程
-	pthread_t msg_handle_thread;
-	if(pthread_create(&msg_handle_thread,NULL,(void *)msg_handle_fun,&client_num))
+	else
 	{
-		printf("Fail to Create Msg Handle Thread.\n");
-		return -1;
+		printf("create connect_listen_thread ok.\n");
 	}
+
 
 	//创建子线程，监听所有的断开
 	pthread_t disconnect_handle_thread;
@@ -75,7 +71,27 @@ int main(int argc, char**argv)
 		printf("Fail to Create Disconnect Handle Thread.\n");
 		return -1;
 	}
-	while(1);
+	else
+	{
+		printf("create disconnect_handle_thread ok.\n");
+	}
+
+	//创建消息监听线程
+	pthread_t msg_handle_thread;
+	if(pthread_create(&msg_handle_thread,NULL,(void *)msg_handle_fun,&client_num))
+	{
+		printf("Fail to Create Msg Handle Thread.\n");
+		return -1;
+	}
+	else
+	{
+		printf("create msg_handle_thread ok.\n");
+	}
+
+	while(1)
+	{
+		;
+	}
 	
 }
 
@@ -105,7 +121,7 @@ static int * msg_handle_fun(void *arg)
 	int j = 0;
 	struct sockaddr_in addr;
 	int addrlen = sizeof(struct sockaddr_in);
-        while(1) 
+    while(1) 
 	{
 		if((*num) == 0)
 			continue;
@@ -120,10 +136,11 @@ static int * msg_handle_fun(void *arg)
 				recv_buf[numbytes]='\0';
 				for(j = 0; j < (*num); j++)
 				{
+					getpeername(client_set[i], (struct sockaddr * )&addr, &addrlen);
 					if(send(client_set[j], recv_buf, sizeof(recv_buf),0)==-1)
 					{
 						//这里需要处理不能通信的socket
-						getpeername(client_set[i], (struct sockaddr * )&addr, &addrlen);
+						
 						if(client_set[i] < 0)
 						{
 							if(i != (*num) -1)
@@ -137,6 +154,7 @@ static int * msg_handle_fun(void *arg)
 							{
 								client_set[i] = 0;
 							}
+							
 							if((*num) > 0)
 								(*num)--;
 							else
@@ -145,6 +163,10 @@ static int * msg_handle_fun(void *arg)
 						}
 
 						continue;
+					}
+					else
+					{
+						printf("send msg to %s \n", inet_ntoa(addr.sin_addr));
 					}
 				}
 			}
@@ -166,6 +188,7 @@ static int * disconnect_handle_fun(void *arg)
 	
 	while(1) 
 	{
+		
 		if((*num) == 0)
 			continue;
 		for(i = 0; i < (*num); i++)
