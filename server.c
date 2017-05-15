@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include <strings.h>
+#include <string.h>
 #include <netinet/tcp.h>
 
 
@@ -121,17 +122,19 @@ static int * msg_handle_fun(void *arg)
 	int j = 0;
 	struct sockaddr_in addr;
 	int addrlen = sizeof(struct sockaddr_in);
-    while(1) 
+	
+       while(1) 
 	{
 		if((*num) == 0)
 			continue;
+		memset(recv_buf, 0, sizeof(recv_buf));
 		for(i = 0; i < (*num); i++)
 		{
 			if((numbytes = recv(client_set[i], recv_buf, sizeof(recv_buf),0))==-1)
 			{
 				continue;
 			}
-			else
+			else if (numbytes > 0)
 			{
 				recv_buf[numbytes]='\0';
 				for(j = 0; j < (*num); j++)
@@ -143,6 +146,7 @@ static int * msg_handle_fun(void *arg)
 						
 						if(client_set[i] < 0)
 						{
+							close(client_set[i]);
 							if(i != (*num) -1)
 							{
 								for(j = 0; j < (*num) - 1; j++)
@@ -196,6 +200,7 @@ static int * disconnect_handle_fun(void *arg)
 			getpeername(client_set[i], (struct sockaddr * )&addr, &addrlen);
 			if(client_set[i] < 0)
 			{
+				close(client_set[i]);
 				if(i != (*num) -1)
 				{
 					for(j = 0; j < (*num) - 1; j++)
@@ -219,6 +224,7 @@ static int * disconnect_handle_fun(void *arg)
 			if(info.tcpi_state != 1)
 			{
 				printf("%s has already disconnect.\n", inet_ntoa(addr.sin_addr));
+				close(client_set[i]);
 				if(i != (*num) -1)
 				{
 					for(j = 0; j < (*num) - 1; j++)

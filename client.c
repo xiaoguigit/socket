@@ -62,6 +62,8 @@ int main(int argc,char *argv[])
 	}
 
 
+	strncpy(msg_buf, msg, strlen(msg));
+
 	//创建消息发送线程
 	pthread_t msg_send_thread;
 	if(pthread_create(&msg_send_thread,NULL,(void *)msg_send_fun,msg_buf))
@@ -75,7 +77,7 @@ int main(int argc,char *argv[])
 	}
 
 
-	strncpy(msg_buf, msg, strlen(msg));
+	//strncpy(msg_buf, msg, strlen(msg));
 
 	while(1);
 
@@ -105,9 +107,10 @@ static int * msg_handle_fun(void *arg)
 static int * msg_send_fun(void *arg)
 {
 	unsigned char *message = (unsigned char *)arg;
+	unsigned char send_buf[1024];
     while(1) 
 	{
-		if(message != NULL)
+		/*if(message != NULL)
 		{
 			if((numbytes = send(sockfd, message, strlen(message),0))==-1)
 			{
@@ -116,6 +119,19 @@ static int * msg_send_fun(void *arg)
 			else
 			{
 				printf("SEND :%s\n",message);
+				sleep(5);
+			}
+		}
+		*/
+		if(fgets(send_buf, 1024, stdin) != NULL)
+		{
+			if((numbytes = send(sockfd, send_buf, strlen(send_buf),0))==-1)
+			{
+				continue;
+			}
+			else
+			{
+				//printf("SEND :%s\n",message);
 			}
 		}
 	}
